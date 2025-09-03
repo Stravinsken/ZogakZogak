@@ -1,0 +1,103 @@
+package com.example.PieceOfPeace.s3;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetUrlRequest;
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class S3UploadService {
+
+    private final S3Client s3Client;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
+
+    public String upload(MultipartFile multipartFile, String dirName) throws IOException {
+        File uploadFile = convert(multipartFile)
+                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File 전환 실패"));
+        return upload(uploadFile, dirName);
+    }
+
+    private String upload(File uploadFile, String dirName) {
+        String fileName = dirName + "/" + UUID.randomUUID() + "_" + uploadFile.getName();
+        String uploadImageUrl = putS3(uploadFile, fileName);
+
+        removeNewFile(uploadFile);
+
+        return uploadImageUrl;
+    }
+
+    private String putS3(File uploadFile, String fileName) {
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(fileName)
+                .acl(ObjectCannedACL.PUBLIC_READ)
+                .build();
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromFile(uploadFile));
+
+        GetUrlRequest getUrlRequest = GetUrlRequest.builder()
+                .bucket(bucket)
+                .key(fileName)
+                .build();
+
+        URL url = s3Client.utilities().getUrl(getUrlRequest);
+        return url.toString();
+    }
+
+    public void deleteFile(String fileUrl) {
+        try {
+            String key = fileUrl.substring(fileUrl.indexOf(bucket) + bucket.length() + 1);
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+            s3Client.deleteObject(deleteObjectRequest);
+            log.info("S3에서 파일 삭제 성공: {}", key);
+        } catch (Exception e) {
+            log.error("S3 파일 삭제 중 오류 발생: {}", fileUrl, e);
+        }
+    }
+
+    private void removeNewFile(File targetFile) {
+        if (targetFile.delete()) {
+            log.info("파일이 삭제되었습니다.");
+        } else {
+            log.info("파일이 삭제되지 못했습니다.");
+        }
+    }
+
+    private Optional<File> convert(MultipartFile file) throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            originalFilename = UUID.randomUUID().toString();
+        }
+
+        File convertFile = new File(Objects.requireNonNull(originalFilename));
+        if (convertFile.createNewFile()) {
+            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
+                fos.write(file.getBytes());
+            }
+            return Optional.of(convertFile);
+        }
+        return Optional.empty();
+    }
+}
