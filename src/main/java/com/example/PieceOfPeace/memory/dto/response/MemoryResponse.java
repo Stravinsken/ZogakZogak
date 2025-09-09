@@ -16,8 +16,17 @@ public class MemoryResponse {
     @Schema(description = "기억 고유 ID")
     private final Long memoryId;
 
+    @Schema(description = "기억 제목")
+    private final String title;
+
     @Schema(description = "기억 내용")
     private final String content;
+
+    @Schema(description = "위도")
+    private final Double latitude;
+
+    @Schema(description = "경도")
+    private final Double longitude;
 
     @Schema(description = "작성자 정보")
     private final WriterResponse writer;
@@ -29,9 +38,12 @@ public class MemoryResponse {
     private final LocalDateTime createdAt;
 
     @Builder
-    public MemoryResponse(Long memoryId, String content, WriterResponse writer, List<MediaResponse> mediaList, LocalDateTime createdAt) {
+    public MemoryResponse(Long memoryId, String title, String content, Double latitude, Double longitude, WriterResponse writer, List<MediaResponse> mediaList, LocalDateTime createdAt) {
         this.memoryId = memoryId;
+        this.title = title;
         this.content = content;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.writer = writer;
         this.mediaList = mediaList;
         this.createdAt = createdAt;
@@ -45,7 +57,10 @@ public class MemoryResponse {
 
         return MemoryResponse.builder()
                 .memoryId(memory.getId())
+                .title(memory.getTitle())
                 .content(memory.getContent())
+                .latitude(memory.getLatitude())
+                .longitude(memory.getLongitude())
                 .writer(WriterResponse.from(memory.getWriter()))
                 .mediaList(mediaResponses)
                 .createdAt(memory.getCreatedAt())

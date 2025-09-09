@@ -35,7 +35,10 @@ public class MemoryService {
                 .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
 
         Memory memory = Memory.builder()
+                .title(request.getTitle())
                 .content(request.getContent())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
                 .writer(writer)
                 .build();
 
@@ -74,6 +77,13 @@ public class MemoryService {
                 .collect(Collectors.toList());
     }
 
+    public List<MemoryResponse> searchMemories(String keyword) {
+        List<Memory> memories = memoryRepository.searchByKeyword(keyword);
+        return memories.stream()
+                .map(MemoryResponse::from)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void updateMemory(Long memoryId, MemoryUpdateRequest request, String userEmail) {
         Memory memory = memoryRepository.findById(memoryId)
@@ -86,7 +96,7 @@ public class MemoryService {
             throw new SecurityException("기억을 수정할 권한이 없습니다.");
         }
 
-        memory.updateContent(request.content());
+        memory.update(request.title(), request.content());
     }
 
     @Transactional
@@ -101,12 +111,10 @@ public class MemoryService {
             throw new SecurityException("기억을 삭제할 권한이 없습니다.");
         }
 
-        // S3에서 미디어 파일들 삭제
         for (Media media : memory.getMediaList()) {
             s3UploadService.deleteFile(media.getMediaUrl());
         }
 
-        // 데이터베이스에서 Memory 삭제 (Media 엔티티는 Cascade 설정으로 함께 삭제됨)
         memoryRepository.delete(memory);
     }
 }

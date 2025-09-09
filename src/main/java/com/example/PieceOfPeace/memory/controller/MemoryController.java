@@ -47,6 +47,12 @@ public class MemoryController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<MemoryResponse>> searchMemories(@RequestParam String keyword) {
+        List<MemoryResponse> results = memoryService.searchMemories(keyword);
+        return ResponseEntity.ok(results);
+    }
+
     @PatchMapping("/{memoryId}")
     public ResponseEntity<Void> updateMemory(
             @PathVariable Long memoryId,

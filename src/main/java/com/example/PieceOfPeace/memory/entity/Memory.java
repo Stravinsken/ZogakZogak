@@ -16,15 +16,24 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class) // 생성일자 자동 기록을 위해 추가
+@EntityListeners(AuditingEntityListener.class)
 public class Memory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String title;
+
     @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id", nullable = false)
@@ -38,19 +47,21 @@ public class Memory {
     private LocalDateTime createdAt;
 
     @Builder
-    public Memory(String content, User writer) {
+    public Memory(String title, String content, User writer, Double latitude, Double longitude) {
+        this.title = title;
         this.content = content;
         this.writer = writer;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
-    // 연관관계 편의 메소드
     public void addMedia(Media media) {
         mediaList.add(media);
         media.setMemory(this);
     }
 
-    // 내용 수정 메소드
-    public void updateContent(String newContent) {
+    public void update(String newTitle, String newContent) {
+        this.title = newTitle;
         this.content = newContent;
     }
 }
