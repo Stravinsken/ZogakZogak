@@ -36,8 +36,6 @@ public class UserController {
         User user = userService.login(request);
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole());
 
-        // LoginRespond DTO에 토큰을 담아 반환
-        // (리프레시 토큰은 아직 구현되지 않았으므로 null로 설정)
         LoginRespond response = new LoginRespond(accessToken, null);
 
         return ResponseEntity.ok(response);

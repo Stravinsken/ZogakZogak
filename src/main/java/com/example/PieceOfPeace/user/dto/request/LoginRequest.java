@@ -9,7 +9,7 @@ public record LoginRequest(
         @Schema(description = "사용자 이메일", example = "test@example.com")
         @NotBlank
         @Email
-        String email, // userId -> email
+        String email,
 
         @Schema(description = "비밀번호", example = "password123")
         @NotBlank

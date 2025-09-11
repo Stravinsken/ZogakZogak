@@ -1,5 +1,6 @@
 package com.example.PieceOfPeace.memory.service;
 
+import com.example.PieceOfPeace.file.FileSystemStorageService;
 import com.example.PieceOfPeace.memory.dto.request.MemoryCreateRequest;
 import com.example.PieceOfPeace.memory.dto.request.MemoryUpdateRequest;
 import com.example.PieceOfPeace.memory.dto.response.MemoryResponse;
@@ -7,7 +8,6 @@ import com.example.PieceOfPeace.memory.entity.Media;
 import com.example.PieceOfPeace.memory.entity.MediaType;
 import com.example.PieceOfPeace.memory.entity.Memory;
 import com.example.PieceOfPeace.memory.repository.MemoryRepository;
-import com.example.PieceOfPeace.s3.S3UploadService;
 import com.example.PieceOfPeace.user.entity.User;
 import com.example.PieceOfPeace.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class MemoryService {
 
     private final MemoryRepository memoryRepository;
     private final UserRepository userRepository;
-    private final S3UploadService s3UploadService;
+    private final FileSystemStorageService fileSystemStorageService; // S3UploadService -> FileSystemStorageService
 
     @Transactional
     public void createMemory(MemoryCreateRequest request, List<MultipartFile> mediaFiles, String writerEmail) throws IOException {
@@ -44,11 +44,12 @@ public class MemoryService {
 
         if (mediaFiles != null && !mediaFiles.isEmpty()) {
             for (MultipartFile file : mediaFiles) {
-                String mediaUrl = s3UploadService.upload(file, "media");
+                // 파일 저장 로직을 새로운 서비스로 변경
+                String storedFilePath = fileSystemStorageService.upload(file, "media");
                 MediaType mediaType = file.getContentType() != null && file.getContentType().startsWith("image") ? MediaType.IMAGE : MediaType.AUDIO;
 
                 Media media = Media.builder()
-                        .mediaUrl(mediaUrl)
+                        .mediaUrl(storedFilePath) // DB에는 파일의 상대 경로를 저장
                         .mediaType(mediaType)
                         .build();
 
@@ -111,8 +112,9 @@ public class MemoryService {
             throw new SecurityException("기억을 삭제할 권한이 없습니다.");
         }
 
+        // 파일 삭제 로직을 새로운 서비스로 변경
         for (Media media : memory.getMediaList()) {
-            s3UploadService.deleteFile(media.getMediaUrl());
+            fileSystemStorageService.deleteFile(media.getMediaUrl());
         }
 
         memoryRepository.delete(memory);

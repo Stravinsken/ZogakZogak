@@ -9,7 +9,7 @@ public record FamilyCreateRequest(
         @Schema(description = "어르신의 사용자 이메일", example = "senior@example.com")
         @NotBlank
         @Email
-        String seniorUserEmail, // seniorUserId -> seniorUserEmail
+        String seniorUserEmail,
 
         @Schema(description = "어르신과의 관계", example = "딸")
         @NotBlank

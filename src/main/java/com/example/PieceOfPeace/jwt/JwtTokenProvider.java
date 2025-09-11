@@ -38,8 +38,8 @@ public class JwtTokenProvider {
 
     @PostConstruct
     protected void init() {
-        byte[] keyBytes = Base64.getEncoder().encode(secretKey.getBytes());
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        // 불필요한 Base64 인코딩을 제거하고, 문자열을 바로 바이트로 변환하여 키를 생성합니다.
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
     public String createAccessToken(String email, UserRole role) {

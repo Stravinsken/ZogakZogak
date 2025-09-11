@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 // --- Swagger UI 접근 허용을 위한 경로 --- //
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-resources/**"
+                                "/swagger-resources/**",
+                                "/swagger-ui.html"
                         ).permitAll()
                         // 그 외 모든 요청은 반드시 인증(로그인)을 거쳐야 함
                         .anyRequest().authenticated()
