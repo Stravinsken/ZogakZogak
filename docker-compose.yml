@@ -6,10 +6,7 @@ services:
       - "8080:8080"
     volumes:
       - ./uploads:/uploads
+    env_file:
+      - ./.env
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      
-      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
