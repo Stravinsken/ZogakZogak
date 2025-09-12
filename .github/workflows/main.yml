@@ -58,3 +58,5 @@ jobs:
             EOF
 
             sudo docker run -d --name pieceofpeace-app -p 8080:8080 --env-file ./.env ${{ secrets.DOCKERHUB_USERNAME }}/zogakzogak:latest
+            
+            
