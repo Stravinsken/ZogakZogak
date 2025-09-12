@@ -23,7 +23,7 @@ import java.security.Principal;
 public class UserController {
 
     private final UserService userService;
-    private final JwtTokenProvider jwtTokenProvider; // JwtTokenProvider 주입
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
