@@ -4,8 +4,10 @@ import com.example.PieceOfPeace.memory.dto.request.MemoryCreateRequest;
 import com.example.PieceOfPeace.memory.dto.request.MemoryUpdateRequest;
 import com.example.PieceOfPeace.memory.dto.response.MemoryResponse;
 import com.example.PieceOfPeace.memory.service.MemoryService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +30,7 @@ import java.util.List;
 public class MemoryController {
 
     private final MemoryService memoryService;
+    private final ObjectMapper objectMapper; // JSON 변환을 위해 ObjectMapper 주입
 
     @Operation(summary = "추억 생성 🗺️", description = "새로운 추억을 제목, 내용, 위치 정보, 그리고 미디어 파일과 함께 생성합니다.")
     @ApiResponses({
@@ -37,10 +40,14 @@ public class MemoryController {
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createMemory(
-            @Parameter(description = "제목, 내용, 위도, 경도를 담은 JSON 데이터") @RequestPart("request") MemoryCreateRequest request,
+            @Parameter(description = "제목, 내용, 위도, 경도를 담은 JSON 데이터")
+            @RequestPart("request") @Schema(implementation = MemoryCreateRequest.class) String requestJson,
             @Parameter(description = "업로드할 이미지 또는 음성 파일 목록") @RequestPart(value = "mediaFiles", required = false) List<MultipartFile> mediaFiles,
             Principal principal
     ) throws IOException {
+        // 문자열로 받은 JSON을 MemoryCreateRequest 객체로 수동 변환
+        MemoryCreateRequest request = objectMapper.readValue(requestJson, MemoryCreateRequest.class);
+
         String writerEmail = principal.getName();
         memoryService.createMemory(request, mediaFiles, writerEmail);
         return ResponseEntity.status(HttpStatus.CREATED).build();
