@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Spring Boot 애플리케이션 서비스 정의
   app:
     build: .
     container_name: pieceofpeace-app
@@ -9,6 +8,8 @@ services:
       - "8080:8080"
     volumes:
       - ./uploads:/uploads
-    # .env 파일로부터 환경 변수를 읽어와 컨테이너에 주입하라는 명령
     env_file:
       - ./.env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+
