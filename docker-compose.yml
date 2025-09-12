@@ -1,11 +1,12 @@
-version: '3.9'
-
 services:
   app:
-    image: username/zogakzogak:latest
+    build: .
     container_name: pieceofpeace-app
-    restart: always
     ports:
       - "8080:8080"
+    volumes:
+      - ./uploads:/uploads
+    env_file:
+      - ./.env
     environment:
-      - SPRING_PROFILES_ACTIVE=prod 
+      SPRING_PROFILES_ACTIVE: prod
