@@ -16,6 +16,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String name;
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -23,17 +26,18 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private String name;
+    private String number;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
 
     @Builder
-    public User(String email, String password, String name, UserRole role) { // userId -> email
+    public User(String name, String email, String password, String number, UserRole role) { // userId -> email
+        this.name = name;
         this.email = email;
         this.password = password;
-        this.name = name;
+        this.number = number;
         this.role = role;
     }
 }

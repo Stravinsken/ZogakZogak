@@ -8,6 +8,11 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "회원가입 요청 DTO")
 public record RegisterRequest(
+
+        @Schema(description = "사용자 이름", example = "김평화")
+        @NotBlank
+        String name,
+
         @Schema(description = "사용자 이메일", example = "test@example.com")
         @NotBlank
         @Email
@@ -17,9 +22,9 @@ public record RegisterRequest(
         @NotBlank
         String password,
 
-        @Schema(description = "사용자 이름", example = "김평화")
+        @Schema(description = "전화번호", example = "010-1234-5678")
         @NotBlank
-        String name,
+        String number,
 
         @Schema(description = "역할 (SENIOR 또는 GUARDIAN)", example = "SENIOR")
         @NotNull

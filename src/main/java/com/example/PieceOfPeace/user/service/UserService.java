@@ -31,6 +31,7 @@ public class UserService {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .name(request.name())
+                .number(request.number())
                 .role(request.role())
                 .build();
 
