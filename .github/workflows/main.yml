@@ -1,4 +1,4 @@
-name: Build and Push to Docker Hub, then Deploy to EC2
+name: Build and Push to Docker Hub
 
 on:
   push:
@@ -35,28 +35,3 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/zogakzogak:latest
-
-  deploy-on-ec2:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: |
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/zogakzogak:latest
-            
-            sudo docker stop pieceofpeace-app || true
-            sudo docker rm pieceofpeace-app || true
-            
-            cd ~/ZogakZogak
-            cat <<EOF > .env
-            ${{ secrets.ENV_FILE_CONTENT }}
-            EOF
-
-            sudo docker run -d --name pieceofpeace-app -p 8080:8080 --env-file ./.env ${{ secrets.DOCKERHUB_USERNAME }}/zogakzogak:latest
-            
-            
