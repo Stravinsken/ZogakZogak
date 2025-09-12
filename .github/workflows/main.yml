@@ -35,3 +35,4 @@ jobs:
             cd ~/ZogakZogak
             echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
             sudo docker compose up --build -d
+            
