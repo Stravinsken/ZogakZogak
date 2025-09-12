@@ -1,12 +1,7 @@
 services:
   app:
     build: .
-    container_name: pieceofpeace-app
     ports:
       - "8080:8080"
-    volumes:
-      - ./uploads:/uploads
     env_file:
       - ./.env
-    environment:
-      SPRING_PROFILES_ACTIVE: prod
