@@ -6,16 +6,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
 public class Diary {
 
     @Id
@@ -25,30 +21,29 @@ public class Diary {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Emotion emotion;
+    private LocalDate date;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User writer;
+    private User user;
 
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+    @OneToOne(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Emotion emotion;
 
     @Builder
-    public Diary(String content, Emotion emotion, User writer) {
-        this.content = content;
-        this.emotion = emotion;
-        this.writer = writer;
+    public Diary(String contents, LocalDate date, User user) {
+        this.content = contents;
+        this.date = date;
+        this.user = user;
     }
 
-    public void update(String content, Emotion emotion) {
-        this.content = content;
+    public void setEmotion(Emotion emotion) {
         this.emotion = emotion;
+    }
+
+    public void update(String contents, Emotion emotion) {
+        this.content = contents;
+        this.emotion.updateScores(emotion.getSadness(), emotion.getAnger(), emotion.getFear(), emotion.getJoy(), emotion.getHappiness(), emotion.getSurprise());
     }
 }

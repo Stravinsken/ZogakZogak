@@ -1,5 +1,6 @@
 package com.example.PieceOfPeace.diary.service;
 
+import com.example.PieceOfPeace.analysis.dto.EmotionDto;
 import com.example.PieceOfPeace.analysis.service.EmotionAnalysisService;
 import com.example.PieceOfPeace.diary.dto.request.DiaryCreateRequest;
 import com.example.PieceOfPeace.diary.dto.request.DiaryUpdateRequest;
@@ -31,23 +32,39 @@ public class DiaryService {
         User writer = userRepository.findByEmail(writerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
 
-        // 감정 분석 서비스 호출
-        Emotion emotion = emotionAnalysisService.analyze(request.content());
-
+        // 1. 먼저 Diary 객체를 생성하고 저장하여 ID를 확보합니다.
         Diary diary = Diary.builder()
-                .content(request.content())
-                .emotion(emotion)
-                .writer(writer)
+                .contents(request.getContents())
+                .date(request.getDate())
+                .user(writer)
+                .build();
+        diaryRepository.save(diary);
+
+        // 2. 감정 분석 서비스를 호출하여 감정 점수를 받습니다.
+        EmotionDto emotionDto = emotionAnalysisService.analyze(request.getContents());
+
+        // 3. 받은 점수와 방금 생성된 Diary 객체로 Emotion 객체를 생성합니다.
+        Emotion emotion = Emotion.builder()
+                .sadness(emotionDto.getSadness())
+                .anger(emotionDto.getAnger())
+                .fear(emotionDto.getFear())
+                .joy(emotionDto.getJoy())
+                .happiness(emotionDto.getHappiness())
+                .surprise(emotionDto.getSurprise())
+                .diary(diary) // Emotion에 Diary를 연결합니다.
                 .build();
 
-        diaryRepository.save(diary);
+        // 4. Diary에 Emotion을 연결합니다. (연관관계의 주인)
+        diary.setEmotion(emotion);
+
+        // Diary는 이미 save되었고, cascade 설정에 의해 Emotion도 함께 저장(또는 업데이트)됩니다.
     }
 
     public List<DiaryResponse> findMyDiaries(String writerEmail) {
         User writer = userRepository.findByEmail(writerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
 
-        List<Diary> diaries = diaryRepository.findAllByWriterIdOrderByCreatedAtDesc(writer.getId());
+        List<Diary> diaries = diaryRepository.findAllByUserOrderByDateDesc(writer);
 
         return diaries.stream()
                 .map(DiaryResponse::from)
@@ -63,13 +80,15 @@ public class DiaryService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
 
         // 작성자 본인만 수정할 수 있도록 권한 확인
-        if (!Objects.equals(diary.getWriter().getId(), user.getId())) {
+        if (!Objects.equals(diary.getUser().getId(), user.getId())) {
             throw new SecurityException("일기를 수정할 권한이 없습니다.");
         }
 
         // 내용이 변경되었으므로 감정을 다시 분석
-        Emotion newEmotion = emotionAnalysisService.analyze(request.content());
-        diary.update(request.content(), newEmotion);
+        EmotionDto newEmotionDto = emotionAnalysisService.analyze(request.getContents());
+
+        // Diary 엔티티의 update 메소드를 사용하여 내용과 감정 점수를 한번에 업데이트
+        diary.update(request.getContents(), newEmotionDto);
     }
 
     @Transactional
@@ -81,7 +100,7 @@ public class DiaryService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
 
         // 작성자 본인만 삭제할 수 있도록 권한 확인
-        if (!Objects.equals(diary.getWriter().getId(), user.getId())) {
+        if (!Objects.equals(diary.getUser().getId(), user.getId())) {
             throw new SecurityException("일기를 삭제할 권한이 없습니다.");
         }
 
