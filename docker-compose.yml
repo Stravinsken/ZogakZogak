@@ -1,8 +1,8 @@
 services:
   app:
-    build: .
+    image: stravinsken/zogakzogak:latest
     ports:
       - "8080:8080"
     env_file:
       - ./.env
-
+    pull_policy: always
