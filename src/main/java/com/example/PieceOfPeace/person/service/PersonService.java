@@ -1,6 +1,5 @@
 package com.example.PieceOfPeace.person.service;
 
-import com.example.PieceOfPeace.file.FileSystemStorageService;
 import com.example.PieceOfPeace.person.dto.request.PersonRegisterRequest;
 import com.example.PieceOfPeace.person.dto.request.PersonUpdateRequest;
 import com.example.PieceOfPeace.person.dto.response.PersonResponse;
