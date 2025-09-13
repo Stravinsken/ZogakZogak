@@ -30,7 +30,7 @@ public class DiaryService {
                 .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
 
         Diary diary = Diary.builder()
-                .contents(request.getContents())
+                .content(request.getContent())
                 .date(request.getDate())
                 .user(writer)
                 .build();
@@ -68,13 +68,11 @@ public class DiaryService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
 
-        // 작성자 본인만 수정할 수 있도록 권한 확인
         if (!Objects.equals(diary.getUser().getId(), user.getId())) {
             throw new SecurityException("일기를 수정할 권한이 없습니다.");
         }
 
-        // Diary 엔티티의 update 메소드를 사용하여 내용과 감정 점수를 한번에 업데이트
-        diary.update(request.getContents(), request.getSadness(), request.getAnger(), request.getFear(), request.getJoy(), request.getHappiness(), request.getSurprise());
+        diary.update(request.getContent(), request.getSadness(), request.getAnger(), request.getFear(), request.getJoy(), request.getHappiness(), request.getSurprise()); // getContents() -> getContent()
     }
 
     @Transactional
@@ -85,7 +83,6 @@ public class DiaryService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
 
-        // 작성자 본인만 삭제할 수 있도록 권한 확인
         if (!Objects.equals(diary.getUser().getId(), user.getId())) {
             throw new SecurityException("일기를 삭제할 권한이 없습니다.");
         }

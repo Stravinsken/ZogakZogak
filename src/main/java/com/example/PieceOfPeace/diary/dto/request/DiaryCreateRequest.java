@@ -6,10 +6,9 @@ import java.time.LocalDate;
 
 @Getter
 public class DiaryCreateRequest {
-    private String contents;
+    private String content;
     private LocalDate date;
 
-    // 프론트엔드에서 분석한 감정 점수를 받을 필드 추가
     private Double sadness;
     private Double anger;
     private Double fear;

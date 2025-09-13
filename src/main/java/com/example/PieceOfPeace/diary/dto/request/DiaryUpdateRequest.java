@@ -4,9 +4,8 @@ import lombok.Getter;
 
 @Getter
 public class DiaryUpdateRequest {
-    private String contents;
+    private String content;
 
-    // 프론트엔드에서 분석한 감정 점수를 받을 필드 추가
     private Double sadness;
     private Double anger;
     private Double fear;

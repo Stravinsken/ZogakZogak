@@ -9,19 +9,20 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Getter
 public class DiaryResponse {
     private final Long id;
-    private final String contents;
+    private final String content;
     private final LocalDate date;
     private final String emotion;
     private final EmotionScoresDto emotionScores;
 
     @Builder
-    public DiaryResponse(Long id, String contents, LocalDate date, String emotion, EmotionScoresDto emotionScores) {
+    public DiaryResponse(Long id, String content, LocalDate date, String emotion, EmotionScoresDto emotionScores) { // contents -> content
         this.id = id;
-        this.contents = contents;
+        this.content = content;
         this.date = date;
         this.emotion = emotion;
         this.emotionScores = emotionScores;
@@ -33,7 +34,7 @@ public class DiaryResponse {
 
         return DiaryResponse.builder()
                 .id(diary.getId())
-                .contents(diary.getContent())
+                .content(diary.getContent())
                 .date(diary.getDate())
                 .emotion(dominantEmotion)
                 .emotionScores(EmotionScoresDto.from(emotionEntity))
@@ -42,7 +43,7 @@ public class DiaryResponse {
 
     private static String findDominantEmotion(Emotion emotion) {
         if (emotion == null) {
-            return null;
+            return "neutral";
         }
 
         Map<String, Double> scores = new HashMap<>();
@@ -53,6 +54,14 @@ public class DiaryResponse {
         scores.put("happiness", emotion.getHappiness());
         scores.put("surprise", emotion.getSurprise());
 
-        return Collections.max(scores.entrySet(), Map.Entry.comparingByValue()).getKey();
+        if (scores.values().stream().allMatch(Objects::isNull)) {
+            return "neutral";
+        }
+
+        return scores.entrySet().stream()
+                .filter(entry -> entry.getValue() != null)
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse("neutral");
     }
 }
