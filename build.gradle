@@ -25,6 +25,12 @@ repositories {
     mavenCentral()
 }
 
+// Spring Cloud AWS의 버전 관리를 위한 BOM(Bill of Materials) 설정
+dependencyManagement {
+    imports {
+        mavenBom "io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1"
+    }
+}
 
 dependencies {
     // Spring Boot Starters
@@ -48,8 +54,8 @@ dependencies {
     // Swagger (Springdoc)
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
-    // AWS S3 SDK
-    implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
+    // AWS S3 SDK (수정된 부분)
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3'
 
     // Spring Boot Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
