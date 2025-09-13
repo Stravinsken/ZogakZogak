@@ -99,5 +99,6 @@ public class PersonService {
         fileService.deleteFile(person.getProfileImageUrl());
 
         personRepository.delete(person);
+
     }
 }
