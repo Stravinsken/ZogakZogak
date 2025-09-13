@@ -1,7 +1,5 @@
 package com.example.PieceOfPeace.diary.service;
 
-import com.example.PieceOfPeace.analysis.dto.EmotionDto;
-import com.example.PieceOfPeace.analysis.service.EmotionAnalysisService;
 import com.example.PieceOfPeace.diary.dto.request.DiaryCreateRequest;
 import com.example.PieceOfPeace.diary.dto.request.DiaryUpdateRequest;
 import com.example.PieceOfPeace.diary.dto.response.DiaryResponse;
@@ -25,14 +23,12 @@ public class DiaryService {
 
     private final DiaryRepository diaryRepository;
     private final UserRepository userRepository;
-    private final EmotionAnalysisService emotionAnalysisService;
 
     @Transactional
     public void createDiary(DiaryCreateRequest request, String writerEmail) {
         User writer = userRepository.findByEmail(writerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
 
-        // 1. 먼저 Diary 객체를 생성하고 저장하여 ID를 확보합니다.
         Diary diary = Diary.builder()
                 .contents(request.getContents())
                 .date(request.getDate())
@@ -40,24 +36,17 @@ public class DiaryService {
                 .build();
         diaryRepository.save(diary);
 
-        // 2. 감정 분석 서비스를 호출하여 감정 점수를 받습니다.
-        EmotionDto emotionDto = emotionAnalysisService.analyze(request.getContents());
-
-        // 3. 받은 점수와 방금 생성된 Diary 객체로 Emotion 객체를 생성합니다.
         Emotion emotion = Emotion.builder()
-                .sadness(emotionDto.getSadness())
-                .anger(emotionDto.getAnger())
-                .fear(emotionDto.getFear())
-                .joy(emotionDto.getJoy())
-                .happiness(emotionDto.getHappiness())
-                .surprise(emotionDto.getSurprise())
-                .diary(diary) // Emotion에 Diary를 연결합니다.
+                .sadness(request.getSadness())
+                .anger(request.getAnger())
+                .fear(request.getFear())
+                .joy(request.getJoy())
+                .happiness(request.getHappiness())
+                .surprise(request.getSurprise())
+                .diary(diary)
                 .build();
 
-        // 4. Diary에 Emotion을 연결합니다. (연관관계의 주인)
         diary.setEmotion(emotion);
-
-        // Diary는 이미 save되었고, cascade 설정에 의해 Emotion도 함께 저장(또는 업데이트)됩니다.
     }
 
     public List<DiaryResponse> findMyDiaries(String writerEmail) {
@@ -84,11 +73,8 @@ public class DiaryService {
             throw new SecurityException("일기를 수정할 권한이 없습니다.");
         }
 
-        // 내용이 변경되었으므로 감정을 다시 분석
-        EmotionDto newEmotionDto = emotionAnalysisService.analyze(request.getContents());
-
         // Diary 엔티티의 update 메소드를 사용하여 내용과 감정 점수를 한번에 업데이트
-        diary.update(request.getContents(), newEmotionDto);
+        diary.update(request.getContents(), request.getSadness(), request.getAnger(), request.getFear(), request.getJoy(), request.getHappiness(), request.getSurprise());
     }
 
     @Transactional

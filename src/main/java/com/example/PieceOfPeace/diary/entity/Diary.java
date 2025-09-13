@@ -19,7 +19,7 @@ public class Diary {
     private Long id;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
+    private String contents;
 
     @Column(nullable = false)
     private LocalDate date;
@@ -33,7 +33,7 @@ public class Diary {
 
     @Builder
     public Diary(String contents, LocalDate date, User user) {
-        this.content = contents;
+        this.contents = contents;
         this.date = date;
         this.user = user;
     }
@@ -42,8 +42,10 @@ public class Diary {
         this.emotion = emotion;
     }
 
-    public void update(String contents, Emotion emotion) {
-        this.content = contents;
-        this.emotion.updateScores(emotion.getSadness(), emotion.getAnger(), emotion.getFear(), emotion.getJoy(), emotion.getHappiness(), emotion.getSurprise());
+    public void update(String contents, Double sadness, Double anger, Double fear, Double joy, Double happiness, Double surprise) {
+        this.contents = contents;
+        if (this.emotion != null) {
+            this.emotion.updateScores(sadness, anger, fear, joy, happiness, surprise);
+        }
     }
 }

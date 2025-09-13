@@ -1,9 +1,19 @@
 package com.example.PieceOfPeace.diary.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
 
-public record DiaryCreateRequest(
-        @NotBlank(message = "일기 내용은 비워둘 수 없습니다.")
-        String content
-) {
+import java.time.LocalDate;
+
+@Getter
+public class DiaryCreateRequest {
+    private String contents;
+    private LocalDate date;
+
+    // 프론트엔드에서 분석한 감정 점수를 받을 필드 추가
+    private Double sadness;
+    private Double anger;
+    private Double fear;
+    private Double joy;
+    private Double happiness;
+    private Double surprise;
 }
