@@ -29,9 +29,19 @@ public class Senior {
     @OneToMany(mappedBy = "senior", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Diary> diaries = new ArrayList<>();
 
+    private Double safeZoneLatitude;
+    private Double safeZoneLongitude;
+    private Integer safeZoneRadius;
+
     @Builder
     public Senior(String name, User guardian) {
         this.name = name;
         this.guardian = guardian;
+    }
+
+    public void updateSafeZone(Double latitude, Double longitude, Integer radius) {
+        this.safeZoneLatitude = latitude;
+        this.safeZoneLongitude = longitude;
+        this.safeZoneRadius = radius;
     }
 }
