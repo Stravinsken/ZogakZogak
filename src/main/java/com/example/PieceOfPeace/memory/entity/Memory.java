@@ -1,6 +1,6 @@
 package com.example.PieceOfPeace.memory.entity;
 
-import com.example.PieceOfPeace.user.entity.User;
+import com.example.PieceOfPeace.user.entity.Senior;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -9,9 +9,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -27,7 +26,10 @@ public class Memory {
     private String title;
 
     @Column(columnDefinition = "TEXT")
-    private String content;
+    private String description; // content -> description으로 필드명 변경
+
+    @Column(nullable = false)
+    private String imageUrl; // 사진 URL 필드 추가
 
     @Column
     private Double latitude;
@@ -35,33 +37,30 @@ public class Memory {
     @Column
     private Double longitude;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "writer_id", nullable = false)
-    private User writer;
+    @Column(nullable = false)
+    private LocalDate memoryDate; // 추억 날짜 필드 추가
 
-    @OneToMany(mappedBy = "memory", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Media> mediaList = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "senior_id", nullable = false) // writer -> senior로 변경
+    private Senior senior;
 
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
     @Builder
-    public Memory(String title, String content, User writer, Double latitude, Double longitude) {
+    public Memory(String title, String description, String imageUrl, Double latitude, Double longitude, LocalDate memoryDate, Senior senior) {
         this.title = title;
-        this.content = content;
-        this.writer = writer;
+        this.description = description;
+        this.imageUrl = imageUrl;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.memoryDate = memoryDate;
+        this.senior = senior;
     }
 
-    public void addMedia(Media media) {
-        mediaList.add(media);
-        media.setMemory(this);
-    }
-
-    public void update(String newTitle, String newContent) {
+    public void update(String newTitle, String newDescription) {
         this.title = newTitle;
-        this.content = newContent;
+        this.description = newDescription;
     }
 }
