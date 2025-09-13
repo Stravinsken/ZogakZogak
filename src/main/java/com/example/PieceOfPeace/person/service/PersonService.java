@@ -1,5 +1,6 @@
 package com.example.PieceOfPeace.person.service;
 
+import com.example.PieceOfPeace.file.service.FileService; // FileSystemStorageService -> FileService
 import com.example.PieceOfPeace.person.dto.request.PersonRegisterRequest;
 import com.example.PieceOfPeace.person.dto.request.PersonUpdateRequest;
 import com.example.PieceOfPeace.person.dto.response.PersonResponse;
@@ -24,27 +25,22 @@ public class PersonService {
 
     private final PersonRepository personRepository;
     private final UserRepository userRepository;
-    private final FileSystemStorageService fileSystemStorageService;
+    private final FileService fileService;
 
     @Transactional
     public void registerPerson(PersonRegisterRequest request, MultipartFile profileImage, String writerEmail) throws IOException {
-        // 1. Vector ID 중복 확인
         personRepository.findByVectorId(request.vectorId()).ifPresent(p -> {
             throw new IllegalArgumentException("이미 등록된 인물입니다.");
         });
 
-        // 2. 작성자 정보 조회
         User writer = userRepository.findByEmail(writerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
 
-        // 3. 프로필 이미지 저장
         String profileImageUrl = null;
         if (profileImage != null && !profileImage.isEmpty()) {
-            // 파일을 "people" 이라는 하위 디렉토리에 저장
-            profileImageUrl = fileSystemStorageService.upload(profileImage, "people");
+            profileImageUrl = fileService.uploadFile(profileImage);
         }
 
-        // 4. Person 엔티티 생성 및 저장
         Person person = Person.builder()
                 .vectorId(request.vectorId())
                 .name(request.name())
@@ -100,8 +96,8 @@ public class PersonService {
             throw new SecurityException("인물 정보를 삭제할 권한이 없습니다.");
         }
 
-        // 1. 서버에 저장된 프로필 이미지 파일 삭제
-        fileSystemStorageService.deleteFile(person.getProfileImageUrl());
+        // 1. S3에 저장된 프로필 이미지 파일 삭제
+        fileService.deleteFile(person.getProfileImageUrl());
 
         // 2. 데이터베이스에서 인물 정보 삭제
         personRepository.delete(person);
