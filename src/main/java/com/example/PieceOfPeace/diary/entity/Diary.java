@@ -1,6 +1,6 @@
 package com.example.PieceOfPeace.diary.entity;
 
-import com.example.PieceOfPeace.user.entity.User;
+import com.example.PieceOfPeace.user.entity.Senior;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,30 +19,31 @@ public class Diary {
     private Long id;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String content; // contents -> content
+    private String content;
 
     @Column(nullable = false)
     private LocalDate date;
 
+    // Diary의 주인을 User에서 Senior로 변경
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "senior_id", nullable = false)
+    private Senior senior;
 
     @OneToOne(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
     private Emotion emotion;
 
     @Builder
-    public Diary(String content, LocalDate date, User user) { // contents -> content
+    public Diary(String content, LocalDate date, Senior senior) { // User -> Senior
         this.content = content;
         this.date = date;
-        this.user = user;
+        this.senior = senior;
     }
 
     public void setEmotion(Emotion emotion) {
         this.emotion = emotion;
     }
 
-    public void update(String content, Double sadness, Double anger, Double fear, Double joy, Double happiness, Double surprise) { // contents -> content
+    public void update(String content, Double sadness, Double anger, Double fear, Double joy, Double happiness, Double surprise) {
         this.content = content;
         if (this.emotion != null) {
             this.emotion.updateScores(sadness, anger, fear, joy, happiness, surprise);

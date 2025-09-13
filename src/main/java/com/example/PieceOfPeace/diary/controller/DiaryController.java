@@ -4,84 +4,58 @@ import com.example.PieceOfPeace.diary.dto.request.DiaryCreateRequest;
 import com.example.PieceOfPeace.diary.dto.request.DiaryUpdateRequest;
 import com.example.PieceOfPeace.diary.dto.response.DiaryResponse;
 import com.example.PieceOfPeace.diary.service.DiaryService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import com.example.PieceOfPeace.user.entity.User;
+import com.example.PieceOfPeace.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
-@Tag(name = "감정 일기 API", description = "감정 일기(Diary) 관련 CRUD API")
 @RestController
 @RequestMapping("/api/diaries")
 @RequiredArgsConstructor
 public class DiaryController {
 
     private final DiaryService diaryService;
+    private final UserRepository userRepository;
 
-    @Operation(summary = "감정 일기 생성 ✍️", description = "새로운 일기를 작성하면, 내용 기반으로 감정을 자동 분석하여 함께 저장합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "일기 생성 성공"),
-            @ApiResponse(responseCode = "400", description = "요청 데이터 유효성 검증 실패"),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
-    })
+    // 새로운 일기 생성 API
     @PostMapping
-    public ResponseEntity<Void> createDiary(@Valid @RequestBody DiaryCreateRequest request, Principal principal) {
-        String writerEmail = principal.getName();
-        diaryService.createDiary(request, writerEmail);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<String> createDiary(@RequestBody DiaryCreateRequest request, @AuthenticationPrincipal UserDetails userDetails) {
+        User guardian = findGuardianByEmail(userDetails.getUsername());
+        diaryService.createDiary(request, guardian);
+        return ResponseEntity.ok("일기가 성공적으로 작성되었습니다.");
     }
 
-    @Operation(summary = "나의 모든 감정 일기 조회 📖", description = "현재 로그인한 사용자가 작성한 모든 일기 목록을 최신순으로 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "일기 목록 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
-    })
-    @GetMapping
-    public ResponseEntity<List<DiaryResponse>> findMyDiaries(Principal principal) {
-        String writerEmail = principal.getName();
-        List<DiaryResponse> response = diaryService.findMyDiaries(writerEmail);
-        return ResponseEntity.ok(response);
+    // 특정 어르신의 모든 일기 목록 조회 API
+    @GetMapping("/senior/{seniorId}")
+    public ResponseEntity<List<DiaryResponse>> getDiariesBySenior(@PathVariable Long seniorId, @AuthenticationPrincipal UserDetails userDetails) {
+        User guardian = findGuardianByEmail(userDetails.getUsername());
+        List<DiaryResponse> diaries = diaryService.findDiariesBySenior(seniorId, guardian);
+        return ResponseEntity.ok(diaries);
     }
 
-    @Operation(summary = "감정 일기 수정 ✏️", description = "특정 ID를 가진 일기의 내용을 수정합니다. 수정 시 감정은 다시 분석됩니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "일기 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "요청 데이터 유효성 검증 실패"),
-            @ApiResponse(responseCode = "403", description = "일기를 수정할 권한이 없음"),
-            @ApiResponse(responseCode = "404", description = "해당 ID의 일기를 찾을 수 없음")
-    })
+    // 일기 수정 API
     @PatchMapping("/{diaryId}")
-    public ResponseEntity<Void> updateDiary(
-            @Parameter(description = "수정할 일기의 ID") @PathVariable Long diaryId,
-            @Valid @RequestBody DiaryUpdateRequest request,
-            Principal principal
-    ) {
-        String userEmail = principal.getName();
-        diaryService.updateDiary(diaryId, request, userEmail);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<String> updateDiary(@PathVariable Long diaryId, @RequestBody DiaryUpdateRequest request, @AuthenticationPrincipal UserDetails userDetails) {
+        User guardian = findGuardianByEmail(userDetails.getUsername());
+        diaryService.updateDiary(diaryId, request, guardian);
+        return ResponseEntity.ok("일기가 성공적으로 수정되었습니다.");
     }
 
-    @Operation(summary = "감정 일기 삭제 🗑️", description = "특정 ID를 가진 일기를 삭제합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "일기 삭제 성공"),
-            @ApiResponse(responseCode = "403", description = "일기를 삭제할 권한이 없음"),
-            @ApiResponse(responseCode = "404", description = "해당 ID의 일기를 찾을 수 없음")
-    })
+    // 일기 삭제 API
     @DeleteMapping("/{diaryId}")
-    public ResponseEntity<Void> deleteDiary(
-            @Parameter(description = "삭제할 일기의 ID") @PathVariable Long diaryId,
-            Principal principal
-    ) {
-        String userEmail = principal.getName();
-        diaryService.deleteDiary(diaryId, userEmail);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> deleteDiary(@PathVariable Long diaryId, @AuthenticationPrincipal UserDetails userDetails) {
+        User guardian = findGuardianByEmail(userDetails.getUsername());
+        diaryService.deleteDiary(diaryId, guardian);
+        return ResponseEntity.noContent().build();
+    }
+
+    private User findGuardianByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("인증된 사용자 정보를 찾을 수 없습니다."));
     }
 }
