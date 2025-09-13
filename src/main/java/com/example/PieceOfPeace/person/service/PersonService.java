@@ -96,10 +96,8 @@ public class PersonService {
             throw new SecurityException("인물 정보를 삭제할 권한이 없습니다.");
         }
 
-        // 1. S3에 저장된 프로필 이미지 파일 삭제
         fileService.deleteFile(person.getProfileImageUrl());
 
-        // 2. 데이터베이스에서 인물 정보 삭제
         personRepository.delete(person);
     }
 }
