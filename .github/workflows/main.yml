@@ -28,9 +28,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      # 4. Gradle로 애플리케이션 빌드
+      # 4. Gradle로 애플리케이션 빌드 (clean 작업 추가)
       - name: Build with Gradle
-        run: ./gradlew bootJar
+        run: ./gradlew clean bootJar
 
       # 5. Docker Hub 로그인
       - name: Login to Docker Hub
@@ -39,14 +39,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 6. Docker 이미지 빌드 및 푸시 (캐시 비활성화 추가)
+      # 6. Docker 이미지 빌드 및 푸시 (캐시 비활성화)
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ env.DOCKER_IMAGE }}
-          no-cache: true  # <-- 바로 이 부분!
+          no-cache: true
 
       # 7. EC2에 접속하여 배포 실행
       - name: Deploy to EC2
