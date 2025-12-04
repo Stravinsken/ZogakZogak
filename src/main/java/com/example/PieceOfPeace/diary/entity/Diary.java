@@ -1,5 +1,6 @@
 package com.example.PieceOfPeace.diary.entity;
 
+import com.example.PieceOfPeace.config.AesGcmConverter;
 import com.example.PieceOfPeace.user.entity.Senior;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -18,6 +19,7 @@ public class Diary {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Convert(converter = AesGcmConverter.class)
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 

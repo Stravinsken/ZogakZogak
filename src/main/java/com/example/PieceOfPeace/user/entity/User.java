@@ -31,7 +31,6 @@ public class User {
     @Column(nullable = false)
     private String number;
 
-    // 이제 User는 보호자 역할만 하므로, role 필드는 필요 없을 수 있습니다.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
