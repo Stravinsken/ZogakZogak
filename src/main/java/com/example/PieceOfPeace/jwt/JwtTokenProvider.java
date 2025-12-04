@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -28,6 +29,9 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration-ms}")
     private long accessTokenValidityInMilliseconds;
 
+    @Value("${jwt.refresh-expiration-ms}")
+    private long refreshTokenValidityInMilliseconds;
+
     private Key key;
 
     private final UserDetailsService userDetailsService;
@@ -38,7 +42,6 @@ public class JwtTokenProvider {
 
     @PostConstruct
     protected void init() {
-        // JWT Secret Key를 Base64로 인코딩하여 안전하게 키를 생성합니다.
         byte[] keyBytes = Base64.getEncoder().encode(secretKey.getBytes());
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
@@ -46,8 +49,24 @@ public class JwtTokenProvider {
     public String createAccessToken(String email, UserRole role) {
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("role", role.name());
+        claims.put("type", "access");
         Date now = new Date();
         Date validity = new Date(now.getTime() + accessTokenValidityInMilliseconds);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String createRefreshToken(String email) {
+        Claims claims = Jwts.claims().setSubject(email);
+        claims.put("type", "refresh");
+        claims.put("jti", UUID.randomUUID().toString());
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + refreshTokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -62,8 +81,20 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
+    private Claims getAllClaims(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+    }
+
     public String getEmail(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
+        return getAllClaims(token).getSubject();
+    }
+
+    public String getJti(String token) {
+        return getAllClaims(token).getId();
+    }
+
+    public String getType(String token) {
+        return getAllClaims(token).get("type", String.class);
     }
 
     public String resolveToken(HttpServletRequest request) {
