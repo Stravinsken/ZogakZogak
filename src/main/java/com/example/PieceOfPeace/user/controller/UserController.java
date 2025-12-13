@@ -1,9 +1,8 @@
 package com.example.PieceOfPeace.user.controller;
 
-import com.example.PieceOfPeace.jwt.JwtTokenProvider;
 import com.example.PieceOfPeace.user.dto.request.LoginRequest;
 import com.example.PieceOfPeace.user.dto.request.RegisterRequest;
-import com.example.PieceOfPeace.user.entity.User;
+import com.example.PieceOfPeace.user.dto.response.LoginResponse;
 import com.example.PieceOfPeace.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
@@ -28,14 +26,14 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-        User user = userService.login(request);
-        String token = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole());
-
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        LoginResponse loginResponse = userService.login(request);
+        
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token);
+        headers.add("Authorization", "Bearer " + loginResponse.accessToken());
 
-        return ResponseEntity.ok().headers(headers).body("로그인이 성공적으로 완료되었습니다.");
+        // 클라이언트가 refreshToken도 받을 수 있도록 응답 본문에 담아 전달
+        return ResponseEntity.ok().headers(headers).body(loginResponse);
     }
 
 }

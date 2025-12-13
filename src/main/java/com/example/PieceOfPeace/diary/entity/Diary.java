@@ -3,10 +3,7 @@ package com.example.PieceOfPeace.diary.entity;
 import com.example.PieceOfPeace.config.AesGcmConverter;
 import com.example.PieceOfPeace.user.entity.Senior;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -26,11 +23,11 @@ public class Diary {
     @Column(nullable = false)
     private LocalDate date;
 
-    // Diary의 주인을 User에서 Senior로 변경
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "senior_id", nullable = false)
     private Senior senior;
 
+    @Setter
     @OneToOne(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
     private Emotion emotion;
 
@@ -39,10 +36,6 @@ public class Diary {
         this.content = content;
         this.date = date;
         this.senior = senior;
-    }
-
-    public void setEmotion(Emotion emotion) {
-        this.emotion = emotion;
     }
 
     public void update(String content, Double sadness, Double anger, Double fear, Double joy, Double happiness, Double surprise) {
