@@ -29,18 +29,21 @@ public class RefreshTokenService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
-        // 기존 리프레시 토큰이 있다면 삭제
-        refreshTokenRepository.findByUserId(user.getId()).ifPresent(refreshTokenRepository::delete);
-
         String tokenValue = jwtTokenProvider.createRefreshToken(email);
         String jti = jwtTokenProvider.getJti(tokenValue);
         Instant expiryDate = Instant.now().plusMillis(refreshTokenDurationMs);
 
-        RefreshToken refreshToken = RefreshToken.builder()
-                .user(user)
-                .token(jti) // JTI 저장
-                .expiryDate(expiryDate)
-                .build();
+        // 기존 토큰이 있으면 업데이트, 없으면 새로 생성
+        RefreshToken refreshToken = refreshTokenRepository.findByUserId(user.getId())
+                .map(token -> {
+                    token.updateToken(jti, expiryDate);
+                    return token;
+                })
+                .orElseGet(() -> RefreshToken.builder()
+                        .user(user)
+                        .token(jti)
+                        .expiryDate(expiryDate)
+                        .build());
 
         refreshTokenRepository.save(refreshToken);
         return tokenValue;
